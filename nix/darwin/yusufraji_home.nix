@@ -35,6 +35,7 @@
       yazi
       zellij
       zoxide
+      gh
 
     ];
     stateVersion = "25.05";
