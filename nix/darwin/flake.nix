@@ -30,6 +30,8 @@
             nixd # nix lsp deamon
             nixfmt-rfc-style # nix language formatter
             nil
+            ollama
+            # open-webui
 
           ];
           environment.variables = {
@@ -60,6 +62,18 @@
 
           # The platform the configuration will be used on.
           nixpkgs.hostPlatform = "aarch64-darwin";
+
+          nixpkgs.config = {
+            # allowBroken = true;
+            allowUnfree = true;
+          };
+          # services.open-webui.enable = true;
+          # launchd.agents.open-webui.serviceConfig = {
+          #   ProgramArguments = [ "${pkgs.open-webui}/bin/open-webui" ];
+          #   EnvironmentVariables.OLLAMA_BASE_URL = "http://127.0.0.1:11434";
+          #   RunAtLoad = true;
+          #   KeepAlive = true;
+          # };
 
           system.keyboard = {
             enableKeyMapping = true;
