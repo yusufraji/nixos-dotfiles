@@ -1,7 +1,14 @@
 { pkgs }:
 {
   enable = true;
-  enableCompletion = true;
+  enableCompletion = false;
+
+  completionInit = "autoload -U compinit && compinit -u";
+
+  initContent = pkgs.lib.mkBefore ''
+    ZSH_DISABLE_COMPFIX="true"
+  '';
+
   package = pkgs.zsh;
   autosuggestion = {
     enable = true;
@@ -14,8 +21,8 @@
   shellAliases = {
     switch = "darwin-rebuild switch --flake ~/dotfiles/nix/darwin";
 
-    cat = "bat --paging=never";
-    ls = "eza";
+    b = "bat --paging=never";
+    l = "eza";
   };
 
   oh-my-zsh = {

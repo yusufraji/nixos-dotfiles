@@ -8,6 +8,7 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+    mac-app-util.url = "github:hraban/mac-app-util";
   };
 
   outputs =
@@ -17,6 +18,7 @@
       nixpkgs,
       home-manager,
       nix-homebrew,
+      mac-app-util,
     }:
     let
       locale = "de_DE.UTF-8";
@@ -32,13 +34,17 @@
             nil
             ollama
             # open-webui
-
+            rage
+            age-plugin-yubikey
+            btop
+            htop
           ];
           environment.variables = {
             EDITOR = "hx";
             VISUAL = "hx";
             LANG = locale;
             LC_ALL = locale;
+            HOMEBREW_CASK_OPTS = "--no-quarantine";
           };
 
           # Allows getting completion for system packages (e.g. systemd).
@@ -49,9 +55,60 @@
           # Necessary for using flakes on this system.
           nix.settings.experimental-features = "nix-command flakes";
           nix.settings.warn-dirty = false;
+          nix.settings = {
+            # extra-platforms = [
+            #   "x86_64-linux"
+            #   "i86-linux"
+            # ];
+
+            trusted-users = [
+              "@admin"
+              "yusufraji"
+            ];
+          };
+
+          # Enable building nixos images & also remote deploy to Linux
+          # systems (nixos) without the need for external remote builders.
+          # This helps when using colmena.
+          # Ref: https://nixcademy.com/posts/macos-linux-builder/
+          nix.linux-builder = {
+            enable = true;
+            ephemeral = true;
+            systems = [
+              "aarch64-linux"
+              "x86_64-linux"
+            ];
+            maxJobs = 4;
+            config = {
+              boot.binfmt.emulatedSystems = [ "x86_64-linux" ];
+              virtualisation = {
+                darwin-builder = {
+                  diskSize = 40 * 1024;
+                  memorySize = 8 * 1024;
+                };
+                cores = 6;
+              };
+            };
+          };
+
+          # Automatic cleanup
+          nix = {
+            gc = {
+              automatic = true;
+              interval = {
+                Weekday = 0;
+                Hour = 3;
+                Minute = 0;
+              };
+              options = "--delete-older-than 10d";
+            };
+          };
+          nix.optimise.automatic = true;
 
           # Enable alternative shell support in nix-darwin.
           # programs.fish.enable = true;
+          programs.zsh.enable = true;
+          programs.zsh.enableCompletion = false;
 
           # Set Git commit hash for darwin-version.
           system.configurationRevision = self.rev or self.dirtyRev or null;
@@ -88,6 +145,7 @@
             nerd-fonts.droid-sans-mono
             nerd-fonts.symbols-only
             nerd-fonts.iosevka
+            ibm-plex
             noto-fonts-color-emoji
           ];
 
@@ -162,10 +220,13 @@
           };
           home-manager = {
             # On activation, move existing files by appending the given
-            # file extension, rather that exiting with an error
+            # file extension, rather than exiting with an error
             backupFileExtension = "backup";
           };
-          users.users."yusufraji".packages = with pkgs; [ mob ];
+          users.users."yusufraji".packages = with pkgs; [
+            mob
+            # orbstack
+          ];
 
         };
     in
@@ -174,11 +235,18 @@
       # $ darwin-rebuild build --flake .#Yusufs-MacBook-Pro
       darwinConfigurations."Yusufs-MacBook-Pro" = nix-darwin.lib.darwinSystem {
         modules = [
+          mac-app-util.darwinModules.default
           configuration
           home-manager.darwinModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            # On activation, move existing files by appending the given
+            # file extension, rather than exiting with an error
+            home-manager.backupFileExtension = "backup";
+            home-manager.sharedModules = [
+              mac-app-util.homeManagerModules.default
+            ];
             home-manager.users.yusufraji = import ./yusufraji_home.nix;
           }
           nix-homebrew.darwinModules.nix-homebrew
@@ -194,6 +262,91 @@
               # Automatically migrate existing Homebrew
               autoMigrate = true;
 
+            };
+          }
+          {
+            homebrew = {
+              enable = true;
+              taps = [
+                "nikitabobko/tap"
+              ];
+              brews = [
+                "act"
+                "arm-none-eabi-gdb"
+                "autoconf"
+                "bat"
+                "c-ares"
+                "coreutils"
+                "dbus"
+                "docker"
+                "docker-completion"
+                "docker-machine"
+                "dotnet@8"
+                "fd"
+                "ffmpeg"
+                "flac"
+                "fzf"
+                "gd"
+                "gibo"
+                "git"
+                "gnupg"
+                "graphviz"
+                "helix"
+                "imagemagick"
+                "jq"
+                "krb5"
+                "lazygit"
+                "libgit2"
+                "llvm"
+                "lua"
+                "m4"
+                "ncurses"
+                "node"
+                "openjdk"
+                "pandoc"
+                "pinentry"
+                "pkgconf"
+                "pre-commit"
+                "protobuf"
+                "pyenv"
+                "pyenv-virtualenv"
+                "python@3.11"
+                "python@3.13"
+                "ripgrep"
+                "sqlite"
+                "telnet"
+                "tree"
+                "unbound"
+                "virtualenv"
+                "wget"
+                "zellij"
+              ];
+              casks = [
+                "aerospace"
+                "alacritty"
+                "amethyst"
+                "dbeaver-community"
+                "db-browser-for-sqlite"
+                # "emacs"
+                "emacs-app"
+                "ghostty"
+                "iterm2"
+                "libreoffice"
+                "rar"
+                "tigervnc"
+
+                "visual-studio-code"
+                "wezterm"
+                "font-symbols-only-nerd-font"
+                # "tigervnc-viewer"
+                "chromium"
+              ];
+
+              onActivation = {
+                autoUpdate = false;
+                cleanup = "zap";
+                # cleanup = "none";
+              };
             };
           }
         ];

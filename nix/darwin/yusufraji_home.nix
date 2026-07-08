@@ -9,11 +9,16 @@
     username = "yusufraji";
     homeDirectory = "/Users/yusufraji";
 
+    file.".ssh/allowed_signers".text = ''
+      raji.yusuf234@gmail.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMejrpUg404m7rj+96mTRd83TbVLQxCnYFsHeTMfobNV raji.yusuf234@gmail.com
+    '';
+
     sessionPath = [
       #   "/usr/local/bin"
       # command line tools for calibre are located in the calibre bundle
       # this makes them available globally
       "/Applications/calibre.app/Contents/MacOS/"
+      "${config.home.homeDirectory}/develop/flutter/bin"
     ];
 
     packages = with pkgs; [
@@ -42,10 +47,44 @@
       zoxide
       gh
       workshop-runner
+      # broken on darwin
       # fcast-client
       # fcast-receiver
       ollama
       # open-webui
+      texliveFull
+      cocoapods
+      scrcpy
+      android-tools
+      just
+      flutter_rust_bridge_codegen
+      fvm
+      protobuf
+      opencv
+      opencv4
+      pkg-config
+      keepassxc
+      # yubioath-flutter is broken on darwin
+      # yubioath-flutter
+      yubikey-manager
+      rage
+      age-plugin-yubikey
+      mediamtx
+      colmena
+      d2
+      # rustdesk is broken on darwin
+      # rustdesk
+      typst
+      sqlx-cli
+      nodejs
+      lefthook
+      # tigervnc is broken on darwin
+      # tigervnc
+      localsend
+      brave
+      # Add for doing some `Artisinal Handcrafted Git Repositories`
+      pigz
+      hexyl
 
     ];
     stateVersion = "25.05";
@@ -60,8 +99,8 @@
       ${pkgs.ollama}/bin/ollama pull codestral
 
       # Warm up models in the background
-      ${pkgs.ollama}/bin/ollama run mistral "warmup" >/dev/null 2>&1 &
-      ${pkgs.ollama}/bin/ollama run codestral "warmup" >/dev/null 2>&1 &
+      # ${pkgs.ollama}/bin/ollama run mistral "warmup" >/dev/null 2>&1 &
+      # ${pkgs.ollama}/bin/ollama run codestral "warmup" >/dev/null 2>&1 &
     '';
   };
 
@@ -103,9 +142,17 @@
         "--color=auto"
       ];
     };
+    delta = {
+      enable = true;
+      enableGitIntegration = true;
+    };
+    # yazi = {
+    #   enable = true;
+    # };
     zsh = import ../home/zsh.nix { inherit pkgs; };
     bat = import ../home/bat.nix { inherit pkgs; };
     git = import ../home/git.nix { inherit pkgs; };
+    firefox = import ../home/firefox.nix { inherit pkgs; };
     home-manager.enable = true;
   };
 
